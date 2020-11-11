@@ -2,18 +2,18 @@
 /*ID: 612110237
 Name: Guineng Cai 
 */
-// extract options phase
+// extract options phase.
 $opts = getopt(
-    "s:e:b::h",
-    ["statt:", "end:", "border::", "help"],
+    's:e:b::h',
+    ['start:', 'end:', 'border::', 'help'],
     $optind
 );
 
-// extract arguments phase
+// extract arguments phase.
 $args = array_slice($_SERVER['argv'], $optind);
 
-// extract application name.
-$appName = $_SERVER['argv'][0];
+// extract script name.
+$scriptName = $_SERVER['argv'][0];
 
 // merge short name to long name
 foreach([
@@ -21,14 +21,16 @@ foreach([
     ['end', 'e'],
     ['border', 'b'],
     ['help', 'h'],
-] as list($long, $short)) {
-    if(!array_key_exists($long, $opts) && array_key_exists($short, $opts)) $opts[$long] = $opts[$short];
+] as list($longName, $shortName)) {
+    if(!array_key_exists($longName, $opts)
+        && array_key_exists($shortName, $opts))
+  $opts[$longName] = $opts[$shortName];
 }
 
-// chek help option
+// chek help
 if(array_key_exists('help', $opts)) {
     printf("%s\n", <<<EOT
-Usage: php {$appName} [options] [--] cstart cend
+Usage: php {$scriptName} [options] [--] cstart cend
 Options:
   -s|--start=row_multipier  specific start row multiplier
                             if this option is not specified start at 1.
@@ -49,35 +51,38 @@ EOT
     exit(0);
 }
 
-// set default value
+// set default
 foreach([
     ['start', 1],
-    ['end', 12]
-] as list($long, $default)) {
-    if(!array_key_exists($long, $opts)) $opts[$long] = $default;
+    ['end', 12],
+] as list($longName, $defaultValue)) {
+    if(!array_key_exists($longName, $opts))
+        $opts[$longName] = $defaultValue;
 }
 
-foreach([
-    ['border', 'both']
-] as list($long, $default)) {
-    if(array_key_exists($long, $opts) && $opts[$long] === false) $opts[$long] = $default;
-}
-
+// case to required data type
 $opts['start'] = (int)$opts['start'];
 $opts['end'] = (int)$opts['end'];
 
-// validate options and arguments
+// set default to flag options
+foreach([
+    ['border', 'both'],
+] as list($longName, $defaultValue)) {
+    if(array_key_exists($longName, $opts) && $opts[$longName] === false)
+        $opts[$longName] = $defaultValue;
+}
+
+// validate options
 $invalidMessage = <<<EOT
 Invalid arguments!!!
 Usage the following command for help.
-php {$appName} -h
+php {$scriptName} -h
 EOT;
 
 $errorMessage = null;
 $cstart = null;
 $cend = null;
-
-if(count($args) !== 2) {
+if($errorMessage === null && count($args) !== 2) {
     $errorMessage = $invalidMessage;
 } else {
     $cstart = (int)$args[0];
@@ -101,34 +106,35 @@ if($errorMessage === null && (
 }
 
 if($errorMessage === null && array_key_exists('border', $opts)) {
-    if(!in_array($opts['border'], ['top', 'left', 'both']))
+    if(!in_array($opts['border'], ['top', 'left', 'both'])) {
         $errorMessage = $invalidMessage;
+    }
 }
 
 if($errorMessage !== null) {
     fprintf(STDERR, "%s\n", $errorMessage);
-    exit(-1); // exit with code other than 0 indicated error
+    exit(-1); // exit with code other than 0 to indicate error.
 }
 
-// real application logic
-if(array_key_exists('border', $opts) && (
-    $opts['border'] === 'both' || $opts['border'] === 'top'
-)) {
-    if($opts['border'] === 'both') printf("%5s ", '');
+// real business code
+if(array_key_exists('border', $opts) && 
+    ($opts['border'] === 'both' || $opts['border'] == 'top')
+) {
+    if($opts['border'] === 'both') printf("%6s", '');
     for($i = $cstart; $i <= $cend; $i++) printf("%5d", $i);
     printf("\n");
-    if($opts['border'] === 'both') printf("%5s+", '');
+    if($opts['border'] === 'both') printf("%6s", '+');
     for($i = $cstart; $i <= $cend; $i++) printf("%5s", str_repeat('-', 5));
     printf("\n");
 }
 for($j = $opts['start']; $j <= $opts['end']; $j++) {
-    if(array_key_exists('border', $opts) && (
-        $opts['border'] === 'both' || $opts['border'] === 'left'
-    )) {
-        printf("%5d|", $j);
+    if(array_key_exists('border', $opts) && 
+        ($opts['border'] === 'both' || $opts['border'] == 'left')
+    ) {
+       printf("%5d|", $j);
     }
     for($i = $cstart; $i <= $cend; $i++) {
-        printf("%5d", $j * $i);
+        printf("%5d", $i * $j);
     }
     printf("\n");
 }
