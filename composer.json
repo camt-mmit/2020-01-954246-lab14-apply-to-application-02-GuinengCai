@@ -1,0 +1,5 @@
+{
+    "require": {
+        "ujjwal/currency-converter": "^2.5"
+    }
+}
